@@ -1,0 +1,53 @@
+// Prisma 7 schema - driverAdapters is now GA (not preview)
+
+generator client {
+  provider = "prisma-client-js"
+  // NO previewFeatures needed - driverAdapters is GA in Prisma 7
+}
+
+datasource db {
+  provider = "postgresql"
+  // NO url or directUrl here in Prisma 7!
+}
+
+model User {
+  id          String       @id @default(cuid())
+  email       String       @unique
+  password    String
+  name        String
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  habits      Habit[]
+  completions Completion[]
+
+  @@index([email])
+}
+
+model Habit {
+  id          String       @id @default(cuid())
+  name        String
+  userId      String
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  isActive    Boolean      @default(true)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  completions Completion[]
+
+  @@index([userId])
+  @@index([userId, isActive])
+}
+
+model Completion {
+  id        String   @id @default(cuid())
+  habitId   String
+  habit     Habit    @relation(fields: [habitId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date      String   // Format: YYYY-MM-DD
+  createdAt DateTime @default(now())
+
+  @@unique([habitId, date])
+  @@index([userId])
+  @@index([userId, date])
+  @@index([date])
+}
